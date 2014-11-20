@@ -1,0 +1,23 @@
+Source: sa2dnsbl 
+Section: universe/mail 
+Priority: optional
+Maintainer: Stefan Jakobs <projects AT localside.net>
+Build-Depends: debhelper (>= 4.1.16)
+
+Package: sa2dnsbl-client
+Depends: perl
+Architecture: all
+Description: sa2dnsbl creates a DNS black hole list in real time. A client, which runs
+   as a SpamAssassin plugin, sends the score level of each message to server,
+   which calculates a reputation score and saves the results in a MySQL Database.
+   This package contains the SpamAssassin plugin
+
+
+Package: sa2dnsbl-daemon
+Depends: perl, logrotate, rsyslog, libnetaddr-ip-perl
+Architecture: all
+Description: sa2dnsbl creates a DNS black hole list in real time. A client, which runs
+   as a SpamAssassin plugin, sends the score level of each message to server,
+   which calculates a reputation score and saves the results in a MySQL Database.
+   This package contains the server and worker scripts.
+

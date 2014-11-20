@@ -1,0 +1,2 @@
+if $programname == 'sa2dnsbld' or $programname == 'sa2dnsblw' then /var/log/sa2dnsbld.log
+if $programname == 'sa2dnsbld' or $programname == 'sa2dnsblw' then ~

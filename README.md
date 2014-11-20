@@ -25,3 +25,9 @@ To make this package work you need at least the following software:
   * cron
 
 Please refer to the INSTALL file for an installation instruction.
+
+Authors:
+--------
+
+Initial idea an release by: Frank Blechschmitt, FBIS
+Further develoment by: Stefan Jakobs

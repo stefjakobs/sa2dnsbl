@@ -1,0 +1,9 @@
+#!/bin/sh
+
+package=sa2dnsbld
+update-rc.d $package defaults
+if which invoke-rc.d >/dev/null 2>&1; then
+   invoke-rc.d $package start
+else
+    /etc/init.d/$package start
+fi
