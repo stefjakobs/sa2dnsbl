@@ -1,0 +1,93 @@
+There are 5 steps to install the sa2dnsbl package:
+1.) Set up D.J. Bernsteins rbldns
+    http://cr.yp.to/djbdns.html
+    Refer to his documentation to correctly setup this service. It
+    is a needed component to use the sa2dnsbl package!
+
+2.) Set up a table in a MySQL database to hold the IP addresses. Use
+    a statement like this:
+    CREATE DATABASE IF NOT EXISTS sa2dnsbl;
+    CREATE TABLE IF NOT EXISTS sa2dnsbl.sa2dnsbl (
+       `ip` varbinary(16) NOT NULL default 0,
+       `ham_hits` int(16) default NULL,
+       `spam_hits` int(16) default NULL,
+       `reputation` int(8) NOT NULL default 50,
+       `lastchange` timestamp NOT NULL default CURRENT_TIMESTAMP,
+       PRIMARY KEY  (`ip`)
+    ) ENGINE=InnoDB;
+    GRANT select, insert, update, delete ON sa2dnsbl.* TO
+       'sa2dnsbl'@'%your.domain.tld' IDENTIFIED BY 'secret';
+
+3.) Install the sa2dnsbld.pl server
+    Copy the sa2dnsbld.pl script to /usr/local/sbin/ and the configuration
+    file sa2dnsbld.cf to /etc/. Ensure that the sa2dnsbld.pl is
+    chmod 755! Edit sa2dnsbld.cf and set the correct settings to connect
+    to your Database. Also setup the IP Address and Port to listen for
+    UDP packets from sa2dnsblc plugin(s). 
+    Copy an init script (sa2dnsbld.init.suse or sa2dnsbld.init.debian) to 
+    /etc/init.d/sa2dnsbld (and adjust it to your needs).
+
+    To test if everything is fine before you start it as service, start the
+    sa2dnsbld.pl script manually:
+      # /usr/local/sbin/sa2dnsbld.pl
+    Dont forget to kill the process after testing before you start the service:
+      # service start sa2dnsbld
+    To enable the service service simply run:
+      # chkconfig --add sa2dnsbld (on RHEL/SUSE)
+      # update-rc.d defaults sa2dnsbld (on Debian/Ubuntu)
+      a link: ln -s /var/sa2dnsbld /service/sa2dnsbld
+    Check with
+      # ps -fC sa2dnsbld.pl
+    if the service is correctly started. If you see a zombie process, stop the
+    daemon script with:
+      # killall sa2dnsbld.pl
+    and solve the problem.
+
+4.) Install the sa2dnsblw.pl worker in your crontab
+    After setting up the client and server the worker is needed to update
+    the 'data' files of rbldns. For this copy sa2dnsblw.pl to /usr/local/sbin/,
+    too. Configure the worker by adding the appropriate settings to /etc/sa2dnsbld.cf
+    or adding the right arguments to the command (see: sa2dnsblw.pl(8)).
+    Test it by simply starting the worker manually. If everything is going
+    well, the 'data' and 'data6' files of rbldns should be updated.
+
+    Now setup a cron event. It depends on your needs how often the worker
+    is refreshing the 'data' files of rbldns.
+    Example: */4 *   * * *   root     /usr/local/sbin/sa2dnsblw.pl
+
+5.) Install the sa2dnsblc spamassassin plugin
+    Copy the sa2dnsblc.pm and sa2dnsblc.cf files into a directory where
+    you normaly store your custom plugins. Edit sa2dnsblc.cf and set the
+    correct values. If you use the whole package on the same machine, use
+    127.0.0.1 as IP address. Ensure that the given Port (default: 5055) is
+    not in use. Otherwise change it to a free Port. If you use sa2dnsbld.pl
+    on a different machine, set a firewall rule to only allow specific clients
+    to connect to this port. Here is an example of a iptables rule which
+    will do that:
+
+    # allow UDP packets for sa2dnsbld
+    iptables -A input -i eth1 -d 11.11.11.11 -s 12.12.12.12 -p udp -m udp --dport 5055 -j ACCEPT
+    (11.11.11.11 is the IP address of the machine running sa2dnsbld.pl)
+    (12.12.12.12 is the IP address of the machine running the sa2dnsblc.pm plugin)
+
+6.) Test IPv6 Support:
+    Use the following lines as your /var/lib/rbldns/data6 file:
+      # Test file
+      # :127.0.0.2:Blocked - see http://www.mydomain.com/blocked.cgi?ip=$
+      !0:0:0:0:0:ffff:7f00:1
+      !2001:0db8:2041:0025:4000:3000:2000:2000
+      2001:db8:2041:25
+      
+    Then run rbldnsd with:
+      # /usr/sbin/rbldnsd -n -r/var/lib/rbldns -b127.0.0.1 bl.example.net:ip6tset:data6
+      # dig +short @127.0.0.1 0.0.0.1.0.0.0.2.0.0.0.3.0.0.0.4.5.2.0.0.1.4.0.2.8.b.d.0.1.0.0.2.bl.example.net
+      127.0.0.1
+      # dig +short @127.0.0.1 0.0.0.2.0.0.0.2.0.0.0.3.0.0.0.4.5.2.0.0.1.4.0.2.8.b.d.0.1.0.0.2.bl.example.net
+      # (no result)
+
+    Unfortunately the following won't work, because 0:0:0:0 will blacklist all IPv4 and IPv6 addresses
+      # dig +short @127.0.0.1 2.0.0.0.0.0.f.7.f.f.f.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.bl.example.net
+      127.0.0.1
+      # dig +short @127.0.0.1 1.0.0.0.0.0.f.7.f.f.f.f.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.bl.example.net
+      # (no result)
+

@@ -1,0 +1,13 @@
+# sa2dnsbl daemon configuration file
+# format:
+#   variable => value,
+
+LOCALPORT    => 5056,
+LOCALIP      => '127.0.0.1',
+DB_HOST      => 'localhost',
+DB_NAME      => 'sa2dnsbl',
+DB_USER      => 'root',
+DB_PASS      => 'secret',
+DB_TABLE     => 'sa2dnsbl',
+LOG_FACILITY => 'LOG_DAEMON',
+

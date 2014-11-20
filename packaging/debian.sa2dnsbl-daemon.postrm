@@ -1,0 +1,5 @@
+#!/bin/sh
+
+if [ "$1" = purge ]; then
+   update-rc.d sa2dnsbld remove
+fi

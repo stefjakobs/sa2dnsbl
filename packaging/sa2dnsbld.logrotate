@@ -1,0 +1,8 @@
+/var/log/sa2dnsbld.log {
+    compress
+    rotate 30
+    maxage 365
+    notifempty
+    missingok
+}
+
